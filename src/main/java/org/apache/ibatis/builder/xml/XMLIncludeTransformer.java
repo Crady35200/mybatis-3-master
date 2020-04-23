@@ -57,6 +57,8 @@ public class XMLIncludeTransformer {
    */
   private void applyIncludes(Node source, final Properties variablesContext, boolean included) {
     if (source.getNodeName().equals("include")) {
+      //解析include包含<sql>的节点
+      //根据refid找到sql片段
       Node toInclude = findSqlFragment(getStringAttribute(source, "refid"), variablesContext);
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
       applyIncludes(toInclude, toIncludeContext, true);
@@ -69,6 +71,7 @@ public class XMLIncludeTransformer {
       }
       toInclude.getParentNode().removeChild(toInclude);
     } else if (source.getNodeType() == Node.ELEMENT_NODE) {
+      //解析非include的元素节点
       if (included && !variablesContext.isEmpty()) {
         // replace variables in attribute values
         NamedNodeMap attributes = source.getAttributes();
@@ -84,6 +87,7 @@ public class XMLIncludeTransformer {
     } else if (included && source.getNodeType() == Node.TEXT_NODE
         && !variablesContext.isEmpty()) {
       // replace variables in text node
+      //解析文本节点
       source.setNodeValue(PropertyParser.parse(source.getNodeValue(), variablesContext));
     }
   }
