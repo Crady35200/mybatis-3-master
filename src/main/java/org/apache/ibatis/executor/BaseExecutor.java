@@ -143,6 +143,7 @@ public abstract class BaseExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     ErrorContext.instance().resource(ms.getResource()).activity("executing a query").object(ms.getId());
+    // closed表示transaction的底层连接是否已经释放
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
@@ -169,6 +170,7 @@ public abstract class BaseExecutor implements Executor {
       }
       // issue #601
       deferredLoads.clear();
+      //一级缓存有两个作用域1、SESSION.2、STATEMENT(相当于没有缓存，每次缓存都会在此清除).默认为SESSION
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
         // issue #482
         clearLocalCache();

@@ -93,10 +93,12 @@ public class CachingExecutor implements Executor {
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
     Cache cache = ms.getCache();
+    //判断是否启用了二级缓存
     if (cache != null) {
       flushCacheIfRequired(ms);
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
+        // 然后判断缓存中是否有对应的缓存条目(正常情况下，执行DML操作会清空缓存，也可以语句层面明确明确设置)，有的话则返回，这样就不用二次查询了
         @SuppressWarnings("unchecked")
         List<E> list = (List<E>) tcm.getObject(cache, key);
         if (list == null) {
@@ -131,6 +133,7 @@ public class CachingExecutor implements Executor {
     }
   }
 
+  // 存储过程不支持二级缓存
   private void ensureNoOutParams(MappedStatement ms, BoundSql boundSql) {
     if (ms.getStatementType() == StatementType.CALLABLE) {
       for (ParameterMapping parameterMapping : boundSql.getParameterMappings()) {
